@@ -1,6 +1,11 @@
 :root {
 	--main-color: #181818;
 }
+* {
+	margin: 0;
+	padding: 0;
+	box-sizing: border-box;
+}
 body {
 	background-color: #181818;
 	color: white;
@@ -15,6 +20,9 @@ main {
 	background-color: black;
 	place-items: center;
 	/* width: 20vw; */
+	display: flex;
+	justify-content: center;
+	align-items: center;
 	height: 30vw;
 	aspect-ratio: 660/500;
 	position: relative;
@@ -28,8 +36,12 @@ main {
 .title {
 	font-weight: 800;
 }
-.eyes img {
+.eye {
 	position: absolute;
+	top: calc(x * 1vw);
+	left: calc(y * 1vw);
+	width: calc(z * 1vw);
+	height: auto;
 }
 
 .container2 {
