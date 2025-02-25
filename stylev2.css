@@ -23,7 +23,8 @@ main {
 	display: flex;
 	justify-content: center;
 	align-items: center;
-	height: 30vw;
+	/* height: 30vw; */
+	max-height: 50vh;
 	aspect-ratio: 660/500;
 	position: relative;
 }
@@ -50,6 +51,7 @@ main {
 	flex-direction: row;
 	min-height: 100vh;
 	padding-top: 5rem;
+	padding: 1rem;
 }
 .left {
 	flex: 1;
@@ -63,6 +65,19 @@ main {
 	word-wrap: break-word;
 	padding: 1rem;
 }
+@media (max-width: 768px) {
+	.container2 {
+		flex-direction: column;
+		align-items: center;
+	}
+
+	.left,
+	.right {
+		flex: none;
+		width: 100%;
+	}
+}
+
 .blob-container {
 	position: relative;
 	width: 100%;
