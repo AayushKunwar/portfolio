@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Simplified Full-Stack Mind Map</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+  <style>
+    :root {
+      --bg: #020617;
+      --bg2: #0f172a;
+      --card-bg: rgba(30, 41, 59, 0.92);
+      --text: #f1f5f9;
+      --muted: #94a3b8;
+
+      /* Softened, cohesive category palette */
+      --root-color: #818cf8;     /* Indigo */
+      --fe-color: #f472b6;       /* Rose */
+      --be-color: #34d399;       /* Emerald */
+      --db-color: #22d3ee;       /* Cyan */
+      --devops-color: #fbbf24;   /* Amber */
+      --tools-color: #c084fc;    /* Purple */
+      --data-color: #60a5fa;     /* Blue */
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background: radial-gradient(1200px 800px at 50% 42%, var(--bg2) 0%, var(--bg) 68%);
+      color: var(--text);
+      font-family: system-ui, -apple-system, sans-serif;
+      overflow: hidden;
+      width: 100vw;
+      height: 100vh;
+    }
+
+    /* subtle dot grid */
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      background-image: radial-gradient(rgba(148, 163, 184, 0.14) 1px, transparent 1px);
+      background-size: 28px 28px;
+      mask-image: radial-gradient(700px 500px at 50% 50%, black 30%, transparent 75%);
+      pointer-events: none;
+    }
+
+    svg {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .hint {
+      position: fixed;
+      left: 16px;
+      bottom: 14px;
+      font-size: 12px;
+      letter-spacing: 0.04em;
+      color: var(--muted);
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid rgba(148, 163, 184, 0.18);
+      padding: 6px 10px;
+      border-radius: 999px;
+      backdrop-filter: blur(6px);
+      pointer-events: none;
+      user-select: none;
+    }
+
+    .link {
+      stroke-width: 1.5px;
+      stroke-linecap: round;
+      opacity: 0.28;
+    }
+
+    .node {
+      cursor: grab;
+      user-select: none;
+      transition: filter 0.2s ease;
+    }
+
+    .node:hover {
+      filter: brightness(1.15);
+    }
+
+    .node:active {
+      cursor: grabbing;
+      filter: brightness(1.25);
+    }
+
+    .node circle {
+      stroke-width: 1.5px;
+      stroke-opacity: 0.9;
+    }
+
+    .node text {
+      font-family: system-ui, -apple-system, sans-serif;
+      text-anchor: middle;
+      dominant-baseline: central;
+      pointer-events: none;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      paint-order: stroke;
+      stroke: rgba(2, 6, 23, 0.85);
+      stroke-width: 3px;
+      stroke-linejoin: round;
+    }
+
+    /* Node Hierarchy Styling */
+    .root circle { fill: #1e1b4e; stroke: var(--root-color); stroke-width: 2px; }
+    .root text { font-size: 15px; fill: #e0e7ff; }
+    .cat text { font-size: 13px; }
+    .leaf circle { fill: var(--card-bg); }
+    .leaf text { fill: #e2e8f0; font-size: 12px; font-weight: 500; }
+  </style>
+</head>
+<body>
+
+<svg id="mindmap"></svg>
+<div class="hint">drag to explore &nbsp;·&nbsp; scroll to zoom</div>
+
+<script>
+  const width = window.innerWidth;
+  const height = window.innerHeight;
+  const centerX = width / 2;
+  const centerY = height / 2;
+  const minDim = Math.min(width, height);
+
+  /*
+    Simplified Schema:
+    1. Frontend (React, JavaScript, Tailwind CSS)
+    2. Backend (Python, Django, REST APIs, Celery)
+    3. Databases (PostgreSQL, Redis)
+    4. DevOps & Cloud (AWS, Docker, GitHub Actions, Linux)
+    5. 3rd Party & Tools (OAuth 2.0, Square API, PyTest, Sentry)
+    6. Web Scraping & Data Processing (Playwright, Celery Beat, Pandas, NumPy, OpenAI API)
+  */
+  const categories = [
+    { 
+      id: 'fe', label: 'Frontend', radius: 38, color: 'var(--fe-color)', angle: -Math.PI / 1.2, 
+      leaves: [
+        { id: 'react', label: 'React', radius: 38 },
+        { id: 'js', label: 'JavaScript', radius: 38 },
+        { id: 'tailwind', label: 'Tailwind CSS', radius: 28 }
+      ]
+    },
+    { 
+      id: 'be', label: 'Backend', radius: 38, color: 'var(--be-color)', angle: -Math.PI / 2.2, 
+      leaves: [
+        { id: 'python', label: 'Python', radius: 38 },
+        { id: 'django', label: 'Django', radius: 38 },
+        { id: 'rest', label: 'REST APIs', radius: 38 },
+        { id: 'celery', label: 'Celery', radius: 38 }
+      ]
+    },
+    { 
+      id: 'db', label: 'Databases', radius: 38, color: 'var(--db-color)', angle: 0, 
+      leaves: [
+        { id: 'postgres', label: 'PostgreSQL', radius: 38 },
+        { id: 'redis', label: 'Redis Cache', radius: 38 }
+      ]
+    },
+    { 
+      id: 'devops', label: 'DevOps &\nCloud', radius: 38, color: 'var(--devops-color)', angle: Math.PI / 2.2, 
+      leaves: [
+        { id: 'aws', label: 'AWS Deployment', radius: 28 },
+        { id: 'docker', label: 'Docker', radius: 38 },
+        { id: 'github', label: 'GitHub Actions', radius: 28 },
+        { id: 'linux', label: 'Linux', radius: 28 }
+      ]
+    },
+    { 
+      id: 'tools', label: '3rd Party &\nTools', radius: 38, color: 'var(--tools-color)', angle: Math.PI / 1.15, 
+      leaves: [
+        { id: 'oauth', label: 'OAuth 2.0', radius: 38 },
+        { id: 'square', label: 'Square API', radius: 38 },
+        { id: 'pytest', label: 'PyTest', radius: 28 },
+        { id: 'sentry', label: 'Sentry', radius: 28 }
+      ]
+    },
+    { 
+      id: 'data', label: 'Data & Web\nScraping', radius: 28, color: 'var(--data-color)', angle: -Math.PI / 1.6, 
+      leaves: [
+        { id: 'playwright', label: 'Playwright', radius: 28 },
+        { id: 'celerybeat', label: 'Celery Beat', radius: 28 },
+        { id: 'pandas', label: 'Pandas', radius: 28 },
+        { id: 'numpy', label: 'NumPy', radius: 28 },
+        { id: 'openai', label: 'OpenAI API', radius: 28 }
+      ]
+    }
+  ];
+
+  const nodesData = [
+    { id: 'root', label: 'Full-Stack\nDeveloper', radius: 48, type: 'root', color: 'var(--root-color)', x: centerX, y: centerY }
+  ];
+
+  const linksData = [];
+
+  // Radial distribution setup — responsive spacing (tight)
+  const catDist = Math.max(150, minDim * 0.21);
+  const leafDist = catDist + Math.max(110, minDim * 0.17);
+  categories.forEach(cat => {
+    const catX = centerX + Math.cos(cat.angle) * catDist;
+    const catY = centerY + Math.sin(cat.angle) * catDist;
+
+    nodesData.push({
+      id: cat.id, label: cat.label, radius: cat.radius, type: 'cat', color: cat.color,
+      x: catX, y: catY
+    });
+
+    linksData.push({ source: 'root', target: cat.id, distance: catDist * 0.82, color: cat.color });
+
+    cat.leaves.forEach((leaf, i) => {
+      const spreadAngle = cat.angle + (i - (cat.leaves.length - 1) / 2) * 0.32;
+      
+      nodesData.push({
+        id: leaf.id, label: leaf.label, radius: leaf.radius, type: 'leaf', color: cat.color,
+        x: centerX + Math.cos(spreadAngle) * leafDist,
+        y: centerY + Math.sin(spreadAngle) * leafDist
+      });
+
+      linksData.push({ source: cat.id, target: leaf.id, distance: 115, color: cat.color });
+    });
+  });
+
+  const svg = d3.select('#mindmap');
+  const viewport = svg.append('g');
+
+  svg.call(
+    d3.zoom()
+      .scaleExtent([0.4, 2.2])
+      .on('zoom', (event) => viewport.attr('transform', event.transform))
+  );
+
+  // D3 Physics Simulation — tighter packing
+  const simulation = d3.forceSimulation(nodesData)
+    .force('link', d3.forceLink(linksData)
+      .id(d => d.id)
+      .distance(d => d.distance)
+      .strength(0.7)
+    )
+    .force('collide', d3.forceCollide()
+      .radius(d => d.radius + 18)
+      .strength(0.9)
+    )
+    .force('charge', d3.forceManyBody().strength(-450))
+    .force('center', d3.forceCenter(centerX, centerY).strength(0.06))
+    .alpha(0.5)
+    .alphaDecay(0.02);
+
+  // Links rendering
+  const link = viewport.append('g')
+    .selectAll('line')
+    .data(linksData)
+    .enter()
+    .append('line')
+    .attr('class', 'link')
+    .attr('stroke', d => d.color);
+
+  // Node groups
+  const node = viewport.append('g')
+    .selectAll('.node')
+    .data(nodesData)
+    .enter()
+    .append('g')
+    .attr('class', d => `node ${d.type}`)
+    .call(d3.drag()
+      .on('start', dragStarted)
+      .on('drag', dragged)
+      .on('end', dragEnded)
+    );
+
+  node.append('circle')
+    .attr('r', d => d.radius)
+    .attr('stroke', d => d.color)
+    .attr('fill', d => d.type === 'root' ? '#1e1b4e' : (d.type === 'cat' ? 'rgba(30,41,59,0.96)' : 'rgba(15,23,42,0.92)'))
+    .style('filter', d => `drop-shadow(0 4px 18px ${d.color === 'var(--root-color)' ? 'rgba(129,140,248,0.35)' : 'rgba(2,6,23,0.6)'})`)
+    .style('stroke-opacity', d => d.type === 'leaf' ? 0.55 : 0.95);
+
+  // Add soft glow ring for category nodes
+  node.filter(d => d.type === 'cat')
+    .append('circle')
+    .attr('r', d => d.radius + 5)
+    .attr('fill', 'none')
+    .attr('stroke', d => d.color)
+    .attr('stroke-opacity', 0.18)
+    .attr('stroke-width', 6);
+
+  // Multiline Text Handler
+  node.each(function(d) {
+    const lines = d.label.split('\n');
+    // category labels: light text for readability, not raw neon
+    const fill = d.type === 'root' ? '#e0e7ff' : (d.type === 'cat' ? '#f8fafc' : '#e2e8f0');
+    
+    const text = d3.select(this).append('text').attr('fill', fill);
+    
+    if (lines.length === 1) {
+      text.text(d.label);
+    } else {
+      text.append('tspan').attr('x', 0).attr('dy', '-0.6em').text(lines[0]);
+      text.append('tspan').attr('x', 0).attr('dy', '1.2em').text(lines[1]);
+    }
+  });
+
+  // Simulation step update
+  simulation.on('tick', () => {
+    link
+      .attr('x1', d => d.source.x)
+      .attr('y1', d => d.source.y)
+      .attr('x2', d => d.target.x)
+      .attr('y2', d => d.target.y);
+
+    node.attr('transform', d => `translate(${d.x}, ${d.y})`);
+  });
+
+  // Drag interaction handlers
+  function dragStarted(event, d) {
+    if (!event.active) simulation.alphaTarget(0.3).restart();
+    d.fx = d.x;
+    d.fy = d.y;
+  }
+
+  function dragged(event, d) {
+    d.fx = event.x;
+    d.fy = event.y;
+  }
+
+  function dragEnded(event, d) {
+    if (!event.active) simulation.alphaTarget(0.01);
+    d.fx = null;
+    d.fy = null;
+  }
+
+  window.addEventListener('resize', () => {
+    simulation.force('center', d3.forceCenter(window.innerWidth / 2, window.innerHeight / 2));
+    simulation.alpha(0.3).restart();
+  });
+</script>
+
+</body>
+</html>
