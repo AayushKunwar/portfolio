@@ -14,8 +14,20 @@
 		<link rel="icon" href="images/tenor.gif" />
 	</head>
 	<body>
-		<div class="blob-container">
+		<header class="site-header">
+			<a class="site-logo" href="#top">AK</a>
+			<nav class="site-nav" aria-label="Primary">
+				<a href="#top">Home</a>
+				<a href="#about">About</a>
+				<a href="#projects">Projects</a>
+				<a href="blog.html">Blog</a>
+				<a href="#contact">Contact</a>
+			</nav>
+		</header>
+		<div class="bg-blob" aria-hidden="true">
 			<div class="blob"></div>
+		</div>
+		<div class="blob-container" id="top">
 			<div class="content">
 				<section class="hero">
 					<div class="hero-body">
@@ -27,7 +39,7 @@
 				</section>
 			</div>
 		</div>
-		<section class="container2">
+		<section class="container2" id="about">
 			<div class="left">
 				<main>
 					<img
@@ -138,7 +150,7 @@
 			</div>
 		</section>
 		<hr hidden />
-		<div class="page-3">
+		<div class="page-3" id="projects">
 		<section class="project-section">
 			<h2 class="title">Projects</h2>
 			<div class="project-grid">
